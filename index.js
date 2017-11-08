@@ -137,13 +137,17 @@ module.exports = {
             'snap': function (filename) {
                 var deferred = nemo.wd.promise.defer(),
                     imageObj = {},
-                    imageName;
+                    imageName,
+                    sourceName;
 
                 driver.takeScreenshot().then(function (screenImg) {
                     imageName = filename + '.png';
+                    sourceName = filename + '.html';
+
 
                     var imageDir = path.resolve(screenShotPath);
                     var imageFullPath = path.join(imageDir, imageName);
+                    var sourceFullPath = path.join(imageDir, sourceName);
 
                     // create directories all the way nested down to the last level
                     mkdirp.sync(path.dirname(imageFullPath));
@@ -170,6 +174,24 @@ module.exports = {
                             deferred.fulfill(imageObj);
                         }
                     });
+                    
+                   var source = driver.getPageSource(); 
+                    source.then(function (src) {
+                      res.json({ message: src }); 
+                   });
+
+                 
+                    // save source file
+                    fs.writeFile(sourceFullPath, screenImg, {
+                        'encoding': 'base64'
+                    }, function (err) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.fulfill(imageObj);
+                        }
+                    });
+                 
                 }, function (err) {
                     deferred.reject(err);
                 });
