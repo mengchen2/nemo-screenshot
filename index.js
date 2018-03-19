@@ -208,6 +208,81 @@ module.exports = {
                     deferred.fulfill(true);
                     return deferred.promise;
                 }
+
+////////////////////////////////////////////////////////WORKING ON SCRIPT////////////////////////////////////////////////////////
+
+                let script = `
+                    function getOffset(el) {
+                        'use strict';
+                        var x = 0, y = 0;
+                    
+                        while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
+                            x += el.offsetLeft - el.scrollLeft;
+                            y += el.offsetTop - el.scrollTop;
+                            el = el.offsetParent;
+                        }
+                        return { left: x, top: y};
+}
+
+                    function walkTheDOMGetInvisiNodes(node, func, invisiNodes) {
+                        'use strict';
+                        func(node, invisiNodes);
+                        node = node.firstChild;
+                        while (node) {
+                            walkTheDOMGetInvisiNodes(node, func, invisiNodes);
+                            node = node.nextSibling;
+                        }
+}
+
+                    function processAllTextNodes(node, invisiNodes) {
+                        'use strict';
+                        if (node.nodeType === 3) { 
+                            var text = node.data.trim();
+                            
+                            if (text.length > 0) {
+                                if (text.charCodeAt(0) === 8288 && text.charCodeAt(1) === 56128 && text.charCodeAt(2) === 56814) {
+                                    invisiNodes.push({'invisitext': text, 'parent': node.parentNode});
+                                }
+                            }
+                        }
+}
+
+                    function getInvisiNodeCoordinates(invisiNodes) {
+                        'use strict';
+                        var i;
+                        for (i = 0; i < invisiNodes.length; i++) {
+                            invisiNodes[i].coordinates = {};
+                            invisiNodes[i].coordinates.width  = invisiNodes[i].parent.getBoundingClientRect().width;
+                            invisiNodes[i].coordinates.height = invisiNodes[i].parent.getBoundingClientRect().height;
+                            invisiNodes[i].coordinates.left = getOffset(invisiNodes[i].parent).left;
+                            invisiNodes[i].coordinates.top = getOffset(invisiNodes[i].parent).top;      
+                            delete invisiNodes[i].parent;
+                            
+                        }
+}
+
+                        var invisiNodes = [];
+                        walkTheDOMGetInvisiNodes(document.body, processAllTextNodes, invisiNodes);
+                        getInvisiNodeCoordinates(invisiNodes);
+                        info = fpti;
+                        invisiNodes.push(info);
+                        return JSON.stringify(invisiNodes);
+                `;
+
+                driver.executeScript(script).then(function (bin_str_invisiNodes) {
+                    //console.log(bin_str_invisiNodes);
+                    let invisinodeName = filename + '.txt';
+                    let folderPath = path.resolve(screenShotPath);
+                    let filePath = path.join(folderPath, invisinodeName);
+
+                    fs.writeFile(filePath, bin_str_invisiNodes, function (err) {
+                        if (err) {
+                            console.error(err);
+                        }
+                    });
+                });
+
+//////////////////////////////////////////////////////////WORKING ON SCRIPT////////////////////////////////////////////////////////
                 driver.getPageSource().then(function (src) {
                     sourceName = filename + '.html';
 
