@@ -13,6 +13,7 @@
  │   limitations under the License.                                            │
  \*───────────────────────────────────────────────────────────────────────────*/
 'use strict';
+var addContext = require('mochawesome/addContext');
 var fs = require('fs');
 var path = require('path');
 var mkdirp = require('mkdirp');
@@ -333,6 +334,7 @@ module.exports = {
 
                 if (autoCaptureOptions.indexOf('source') !== -1) {
                     nemo.screenshot.source(filename);
+                    addContext(nemo.mocha, filename);
                 }
                 return nemo.screenshot.snap(filename)
                     .then(oclick.apply(this, arguments));
@@ -353,10 +355,6 @@ module.exports = {
 
                         if (testTitle) {
                             filename = titleSlug(testTitle);
-                        }
-
-                        if (autoCaptureOptions.indexOf('source') !== -1) {
-                            nemo.screenshot.source(filename);
                         }
 
                         nemo.screenshot.snap(filename).then(function (imageObject) {
